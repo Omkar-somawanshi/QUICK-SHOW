@@ -10,10 +10,12 @@ import {
 import Title from "../../components/admin/Title";
 import Loading from "../../components/Loading";
 import BlurCircle from "../../components/BlurCircle";
-import { dummyDashboardData } from "../../assets/assets";
 import { dateFormat } from "../../lib/dateFormat";
+import toast from "react-hot-toast";
+import { useAppContext } from "../../context/AppContext";
 
 const Dashboard = () => {
+  const { axios, getToken, user, image_base_url } = useAppContext();
   const currency = import.meta.env.VITE_CURRENCY;
 
   const [dashboardData, setDashboardData] = useState({
@@ -49,15 +51,29 @@ const Dashboard = () => {
   ];
 
   const fetchDashboardData = async () => {
-    setTimeout(() => {
-      setDashboardData(dummyDashboardData);
+    try {
+      const { data } = await axios.get("/api/admin/dashboard", {
+        headers: {
+          Authorization: `Bearer ${await getToken()}`,
+        },
+      });
+
+      if (data.success) {
+        setDashboardData(data.dashboardData);
+      } else {
+        toast.error(data.message || "Failed to load dashboard data");
+      }
+    } catch (error) {
+      toast.error("Failed to fetch dashboard data.");
+      console.error("Dashboard fetch error:", error);
+    } finally {
       setLoading(false);
-    }, 500);
+    }
   };
 
   useEffect(() => {
-    fetchDashboardData();
-  }, []);
+    if (user) fetchDashboardData();
+  }, [user]);
 
   if (loading) return <Loading />;
 
@@ -68,9 +84,10 @@ const Dashboard = () => {
       <BlurCircle bottom="-50px" right="0px" />
 
       {/* Dashboard Title */}
-<div className="pb-10">
-       <Title text1="Admin" text2="Dashboard" />
-     </div>
+      <div className="pb-10">
+        <Title text1="Admin" text2="Dashboard" />
+      </div>
+
       {/* Dashboard Stat Cards */}
       <div className="flex flex-wrap gap-4 mt-6">
         {dashboardCards.map((card, index) => {
@@ -98,16 +115,24 @@ const Dashboard = () => {
 
         {dashboardData.activeShows.map((show) => (
           <div
-            key={show.id}
+            key={show._id}
             className="w-56 rounded-lg overflow-hidden h-full pb-3 bg-primary/10 border border-primary/20 hover:-translate-y-1 transition duration-300 shadow-sm"
           >
-            <img
-              src={show.movie.poster_path}
-              alt={show.movie.title}
-              className="h-60 w-full object-cover"
-            />
-            <p className="font-medium p-2 truncate">{show.movie.title}</p>
+            {/* Movie Poster - Only show if poster_path exists */}
+            {show.movie?.poster_path && (
+              <img
+                src={image_base_url + show.movie.poster_path}
+                alt={show.movie?.title || "Movie"}
+                className="h-60 w-full object-cover"
+              />
+            )}
 
+            {/* Movie Title */}
+            <p className="font-medium p-2 truncate">
+              {show.movie?.title || "No Title"}
+            </p>
+
+            {/* Show Price & Rating */}
             <div className="flex items-center justify-between px-2">
               <p className="text-lg font-medium">
                 {currency}
@@ -115,10 +140,13 @@ const Dashboard = () => {
               </p>
               <p className="flex items-center gap-1 text-sm text-gray-400 mt-1">
                 <StarIcon className="w-4 h-4 text-primary fill-primary" />
-                {show.movie.vote_average.toFixed(1)}
+                {show.movie && typeof show.movie.vote_average === "number"
+                  ? show.movie.vote_average.toFixed(1)
+                  : "N/A"}
               </p>
             </div>
 
+            {/* Show Date */}
             <p className="px-2 pt-2 text-sm text-gray-500">
               {dateFormat(show.showDateTime)}
             </p>

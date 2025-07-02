@@ -2,8 +2,6 @@ import Show from "../models/Show.js";
 import Booking from "../models/Booking.js";
 import User from "../models/User.js";
 
-
-
 // API to check if user is admin
 export const isAdmin = async (req, res) => {
   res.json({ success: true, isAdmin: true });
@@ -12,24 +10,30 @@ export const isAdmin = async (req, res) => {
 // API to get dashboard data
 export const getDashboardData = async (req, res) => {
   try {
+    // Total Bookings and Revenue
     const bookings = await Booking.find({ isPaid: true });
+    const totalBookings = bookings.length;
+    const totalRevenue = bookings.reduce((total, booking) => total + booking.amount, 0);
+
+    // Active Shows (future shows) with populated movie info
     const activeShows = await Show.find({
       showDateTime: { $gte: new Date() },
     }).populate("movie");
 
-    const totalUser = await User.countDocuments();
+    // Total Users
+    const totalUsers = await User.countDocuments();
 
     const dashboardData = {
-      totalBookings: bookings.length,
-      totalRevenue: bookings.reduce((total, booking) => total + booking.amount, 0),
+      totalBookings,
+      totalRevenue,
       activeShows,
-      totalUser,
+      totalUsers,   // ✅ Corrected from totalUser to totalUsers
     };
 
     res.json({ success: true, dashboardData });
   } catch (error) {
-    console.error(error);
-    res.json({ success: false, message: error.message });
+    console.error("Dashboard error:", error);
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
