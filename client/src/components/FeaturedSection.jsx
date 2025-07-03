@@ -2,11 +2,12 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import BlurCircle from "./BlurCircle";
-import { dummyShowsData } from "../assets/assets";
 import MovieCard from "./MovieCard";
+import { useAppContext } from "../context/AppContext";
 
 const FeaturedSection = () => {
   const navigate = useNavigate();
+  const { shows } = useAppContext();
 
   return (
     <div className="px-6 md:px-16 lg:px-24 xl:px-44 overflow-hidden">
@@ -25,9 +26,9 @@ const FeaturedSection = () => {
 
       {/* Movie Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {Array.isArray(dummyShowsData) && dummyShowsData.length > 0 ? (
-          dummyShowsData.slice(0, 4).map((movie) => (
-            <MovieCard key={movie.id} movie={movie} />
+        {Array.isArray(shows) && shows.length > 0 ? (
+          shows.slice(0, 4).map((show) => (
+            <MovieCard key={show._id} movie={show.movie} />
           ))
         ) : (
           <p className="text-white">No movies available</p>

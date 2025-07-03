@@ -150,7 +150,8 @@ export const getShow = async (req, res) => {
       });
     });
 
-    res.json({ success: true, movie, dateTime });
+    // ✅ Wrap movie + dateTime inside `show` key
+    res.json({ success: true, show: { movie, dateTime } });
   } catch (error) {
     console.error("❌ Error fetching show for movie:", error);
     res.status(500).json({ success: false, message: error.message });
