@@ -7,10 +7,10 @@ import screenImage from "../assets/screenImage.svg";
 import toast from "react-hot-toast";
 import { useAppContext } from "../context/AppContext";
 import isoTimeFormat from "../lib/IsoTimeFormat";
-import dayjs from "dayjs"; // ✅ Added for date formatting
+import dayjs from "dayjs";
 
 const Seatlayout = () => {
-  const { id, date } = useParams();
+  const { id, date } = useParams(); // Removed "time" param
   const navigate = useNavigate();
   const { axios, getToken, user } = useAppContext();
 
@@ -19,7 +19,6 @@ const Seatlayout = () => {
   const [selectedSeats, setSelectedSeats] = useState([]);
   const [occupiedSeats, setOccupiedSeats] = useState([]);
 
-  // Format date to YYYY-MM-DD
   const formattedDate = dayjs(date).format("YYYY-MM-DD");
 
   useEffect(() => {
@@ -28,7 +27,7 @@ const Seatlayout = () => {
         const { data } = await axios.get(`/api/show/${id}`, {
           headers: { Authorization: `Bearer ${await getToken()}` },
         });
-        if (data.success) setShow(data);
+        if (data.success) setShow(data.show);
         else toast.error(data.message);
       } catch (error) {
         console.error("Failed to fetch show:", error);
@@ -42,9 +41,7 @@ const Seatlayout = () => {
   useEffect(() => {
     const getOccupiedSeats = async () => {
       try {
-        const { data } = await axios.get(
-          `/api/booking/seats/${selectedTime.showId}`
-        );
+        const { data } = await axios.get(`/api/booking/seats/${selectedTime.showId}`);
         if (data.success) {
           setOccupiedSeats(data.occupiedSeats);
         } else {
@@ -62,28 +59,39 @@ const Seatlayout = () => {
   }, [selectedTime]);
 
   const bookTickets = async () => {
-    try {
-      if (!user) return toast.error("Please login to proceed");
-      if (!selectedTime || selectedSeats.length === 0)
-        return toast.error("Please select time and seats.");
+  try {
+    if (!user) return toast.error("Please login to proceed.");
+    if (!selectedTime || selectedSeats.length === 0)
+      return toast.error("Please select time and seats.");
 
-      const { data } = await axios.post(
-        "/api/booking/create",
-        { showId: selectedTime.showId, seats: selectedSeats },
-        { headers: { Authorization: `Bearer ${await getToken()}` } }
-      );
+    console.log("📦 Sending booking payload:", {
+      showId: selectedTime.showId,
+      selectedSeats,
+    });
 
-      if (data.success) {
-        toast.success(data.message || "Booking successful!");
-        navigate("/my-bookings");
-      } else {
-        toast.error(data.message || "Booking failed!");
-      }
-    } catch (error) {
-      console.error("Booking error:", error);
-      toast.error("Something went wrong while booking.");
+   const { data } = await axios.post(
+  "/api/booking/create",
+  { showId: selectedTime.showId, selectedSeats },
+  { headers: { Authorization: `Bearer ${await getToken()}` } }
+);
+
+console.log("📦 Server response:", data);  // Add this
+
+
+    console.log("📥 Response from /booking/create:", data);
+
+    if (data.success) {
+      toast.success(data.message || "Booking successful!");
+      navigate("/mybooking");
+    } else {
+      toast.error(data.message || "Booking failed.");
     }
-  };
+  } catch (error) {
+    console.error("Booking error:", error.response?.data || error.message);
+    toast.error("Something went wrong while booking.");
+  }
+};
+
 
   const handleSeatClick = (seatId) => {
     if (!selectedTime) return toast.error("Please select a time first.");
@@ -100,16 +108,7 @@ const Seatlayout = () => {
   };
 
   const rowConfig = {
-    A: 9,
-    B: 7,
-    C: 9,
-    D: 9,
-    E: 9,
-    F: 6,
-    G: 9,
-    H: 9,
-    I: 6,
-    J: 5,
+    A: 9, B: 7, C: 9, D: 9, E: 9, F: 6, G: 9, H: 9, I: 6, J: 5,
   };
 
   const renderSeats = (row, count) => (

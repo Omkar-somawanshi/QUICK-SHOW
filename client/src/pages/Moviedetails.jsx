@@ -135,7 +135,16 @@ const Moviedetails = () => {
       </div>
 
       {/* Date Selector */}
-      <DateSelect dateTime={show.dateTime} id={id} />
+<DateSelect
+  dateTime={Object.fromEntries(
+    Object.entries(show.dateTime).map(([date, slots]) => [
+      date,
+      slots.map((slot) => slot.time),
+    ])
+  )}
+  id={id}
+/>
+
 
       {/* You May Also Like Section */}
       <p className="text-lg font-medium mt-20 mb-8">You May Also Like</p>
