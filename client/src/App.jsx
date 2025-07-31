@@ -2,7 +2,7 @@ import React from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
-import Home from "./pages/home";
+import Home from "./pages/Home.jsx";
 import Seatlayout from "./pages/Seatlayout";
 import Moviedetails from "./pages/Moviedetails";
 import Favorite from "./pages/Favorite";
@@ -19,7 +19,7 @@ import { SignIn } from "@clerk/clerk-react";
 
 const App = () => {
   const isAdminRoute = useLocation().pathname.startsWith("/admin");
-  const {user}=useAppContext();
+  const { user } = useAppContext();
 
   return (
     <>
@@ -31,17 +31,24 @@ const App = () => {
         <Route path="/" element={<Home />} />
         <Route path="/movies" element={<Movies />} />
         <Route path="/movies/:id" element={<Moviedetails />} />
-<Route path="/movies/:id/:date/:time" element={<Seatlayout />} />
-<Route path="/mybooking" element={<Mybooking />} />
+        <Route path="/movies/:id/:date/:time" element={<Seatlayout />} />
+        <Route path="/mybooking" element={<Mybooking />} />
         <Route path="/favorite" element={<Favorite />} />
         <Route path="/home" element={<Home />} />
 
         {/* ✅ Admin Nested Routes */}
-        <Route path="/admin/*" element={user ?<Layout /> :(
-          <div className="min-h-screen flex justify-center items-center">
-            <SignIn  fallbackRedirectUrl={'/admin'}/>
-          </div>
-        )}>
+        <Route
+          path="/admin/*"
+          element={
+            user ? (
+              <Layout />
+            ) : (
+              <div className="min-h-screen flex justify-center items-center">
+                <SignIn fallbackRedirectUrl={"/admin"} />
+              </div>
+            )
+          }
+        >
           <Route index element={<Dashboard />} />
           <Route path="add-shows" element={<AddShows />} />
           <Route path="list-shows" element={<ListShows />} />
